@@ -33,7 +33,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Husky.Tests" />
-    <InternalsVisibleTo Include="Husky.TuiDemo" />
+    <InternalsVisibleTo Include="Husky.Demo" />
   </ItemGroup>
 
   <ItemGroup>

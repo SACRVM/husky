@@ -23,7 +23,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Husky.TestApp", "tests\Husk
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{5D20AA90-6969-D8BD-9DCD-8634F4692FDA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Husky.TuiDemo", "samples\Husky.TuiDemo\Husky.TuiDemo.csproj", "{286D2942-32F7-4A90-8ABD-80ACD4F4E53D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Husky.Demo", "samples\Husky.Demo\Husky.Demo.csproj", "{286D2942-32F7-4A90-8ABD-80ACD4F4E53D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

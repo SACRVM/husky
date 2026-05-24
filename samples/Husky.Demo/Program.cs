@@ -2,45 +2,44 @@ using System.Globalization;
 using Husky;
 using Retro.Crt;
 
-// Husky TUI demo — exercises the LEASH §10.4 layout without a real
-// LauncherRuntime, so we can iterate visually without a config / source /
-// hosted app. Constructs HuskyApp directly via InternalsVisibleTo, swaps
-// ConsoleOutput's sink, and drives a scripted fixture loop on a background
-// task.
+// Husky interactive-mode demo — exercises the LEASH §10.4 sticky-footer +
+// native-scrollback layout without a real LauncherRuntime, so we can
+// iterate visually without a config / source / hosted app. Constructs
+// HuskyApp directly via InternalsVisibleTo, swaps ConsoleOutput's sink, and
+// drives a scripted fixture loop on a background task.
 //
-// Pre-TUI (line mode, before the alt-screen takeover):
+// Pre-footer warm-up (plain line mode, before HuskyApp.Run starts the footer):
 //   0. ascii banner with ice-blue → cyan gradient + a brief 'sniffing for
-//      updates' spinner that disposes silently before the alt-screen kicks
-//      in — matches how prod's Program.cs warms up before HuskyApp.Run.
+//      updates' spinner that disposes silently — matches how prod's
+//      Program.cs warms up before HuskyApp.Run.
 //
 // The fixtures cover, in order:
-//   1. boot sequence (5 quick husky lines, header populates, [u] greys
-//      because 'manual-updates' is supported but no update is cached).
+//   1. boot sequence (5 quick husky lines, status row populates, [u] shows
+//      because 'manual-updates' is supported).
 //   2. heartbeat-style app stdout ticks.
-//   3. watchdog pong updates with status words.
+//   3. watchdog pong updates with status words (highlighted in colour).
 //   4. mixed status palette (up / down / healthy / degraded).
 //   5. force-true growl escalation (the dog barks audibly).
-//   6. animated InPlaceSpinner cycle ('sniffing for updates' → result),
-//      flips [u] from greyed to accent on cached UpdateInfo.
-//   7. extra-long line to verify LogViewer clipping (no wrapping).
+//   6. animated InPlaceSpinner cycle ('sniffing for updates' → result).
+//   7. extra-long line — wraps naturally in the terminal (no clipping now).
 //   8. fake download driving the real ProgressBarDownloadSink so the
-//      in-place line (LEASH §10.6) animates against the live LogViewer
-//      and the 100 % frame lands via the throttle-bypassing UpdateNow.
+//      in-place line (LEASH §10.6) animates live in scrollback and the
+//      100 % frame lands via the throttle-bypassing UpdateNow.
 //   9. animated InPlaceSpinner with intermediate UpdateLabel
 //      (graceful-shutdown style: 'asking app to sit' → 'no ack' → 'sat down').
-//  10. fake crash + 5-second restart-pause countdown — header's right
-//      slot reads 'down — restarting in Ns' in red while [u] hides.
-//  11. 200-line burst to verify the ConcurrentQueue drain keeps up.
+//  10. fake crash + 5-second restart-pause countdown — the status row's
+//      right slot reads 'down — restarting in Ns' in red while [u] hides.
+//  11. 200-line burst to verify writes keep up under load.
 //
 // After the burst the demo idles. Press [s] for the save-logs toast,
 // [u] for an update-now log line, Esc to exit.
 //
-// Run with: dotnet run --project samples/Husky.TuiDemo
+// Run with: dotnet run --project samples/Husky.Demo
 
 using var demoCts = new CancellationTokenSource();
 
 // Self-reference for the exit callback: the lambda must call Dismiss() on
-// the same HuskyApp instance to break out of Application.Run(). The real
+// the same HuskyApp instance to break the input loop out of Run(). The real
 // launcher achieves the same handoff by dismissing from the runtime task's
 // `finally` block; the demo has no runtime, so the hotkey itself does both.
 HuskyApp app = null!;
@@ -59,22 +58,21 @@ app = new HuskyApp(
     {
         try { demoCts.Cancel(); }
         catch (ObjectDisposedException) { /* shutting down */ }
-        // Without this the fixture loop unwinds but Application.Run keeps
+        // Without this the fixture loop unwinds but Run()'s input loop keeps
         // blocking the main thread, so [x]/Esc would silently 'do nothing'.
         app.Dismiss();
     });
 
-// Match the production pre-TUI sequence (LEASH §10.3): banner + a brief
-// 'sniffing for updates' line-mode spinner before the alt-screen takeover.
-// The default CrtConsoleSink renders these into the real terminal; Run()
-// then installs the alt-screen and restores this view on exit.
+// Match the production warm-up (LEASH §10.3): banner + a brief 'sniffing
+// for updates' line-mode spinner before the sink swap. The default
+// CrtConsoleSink renders these into the real terminal; Run() then starts
+// the sticky footer over the same native scrollback.
 Husky.Banner.Render("0.3.2-demo");
 using (var bootSpinner = new InPlaceSpinner("sniffing for updates"))
 {
     await Task.Delay(1200).ConfigureAwait(false);
-    // Silent dispose — the in-TUI BootSequenceAsync owns the result line,
-    // matching how LauncherRuntime announces 'up to date.' / 'new version
-    // found' inside the alt-screen.
+    // Silent dispose — BootSequenceAsync owns the result line, matching how
+    // LauncherRuntime announces 'up to date.' / 'new version found'.
 }
 
 ConsoleOutput.SetSink(app);
@@ -84,8 +82,8 @@ Task fixtureTask = Task.Run(() => RunFixturesAsync(demoCts.Token));
 app.Run();
 
 // User pressed Esc → demoCts already cancelled by the callback. If we got
-// here some other way (Application.Exit from somewhere, future hotkey),
-// make sure the fixture loop unwinds.
+// here some other way (Dismiss from elsewhere, future hotkey), make sure
+// the fixture loop unwinds.
 try { demoCts.Cancel(); } catch (ObjectDisposedException) { }
 try { await fixtureTask.ConfigureAwait(false); }
 catch (OperationCanceledException) { /* expected */ }
@@ -171,9 +169,9 @@ static async Task ActivityLoopAsync(CancellationToken ct)
                     messageColor: Color.Yellow);
                 break;
             case 7:
-                // Growl escalation — force:true triggers the bell in line
-                // mode; in TUI it just appears at the tail like everything
-                // else but Crt.Bell still fires (audible).
+                // Growl escalation — force:true rings the bell. In
+                // interactive mode it appears at the tail like every other
+                // line (no in-place op is open here), bell still fires.
                 ConsoleOutput.SetHealth("unhealthy");
                 ConsoleOutput.Husky(
                     "growling — no pong in 30s. probing.",
@@ -188,7 +186,7 @@ static async Task ActivityLoopAsync(CancellationToken ct)
                 break;
             case 10:
                 // Manual-mode update notification, before the FakeSniffing
-                // and FakeDownload fixtures take over the lower viewport.
+                // and FakeDownload fixtures drive the in-place line.
                 ConsoleOutput.Husky("manual mode — notifying app, waiting for trigger.");
                 break;
             default:
@@ -198,8 +196,8 @@ static async Task ActivityLoopAsync(CancellationToken ct)
         }
     }
 
-    // Long-line clipping fixture (LEASH §10.4: no wrapping; LogViewer clips
-    // with a "…" marker at the right edge).
+    // Long-line fixture: with native scrollback the terminal wraps this
+    // across rows (no in-app clipping any more, LEASH §10.4).
     ConsoleOutput.AppOut(
         "demo-app: VERY-LONG-LINE — " +
         new string('-', 220) +
