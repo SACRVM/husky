@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 
 namespace Husky;
 
@@ -68,6 +69,12 @@ internal sealed class AppProcess : IAsyncDisposable
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true,
+            // Decode the child's stdout/stderr as UTF-8 explicitly instead
+            // of inheriting whatever Console.OutputEncoding happens to be.
+            // The launcher sets that to UTF-8 today, but the redirected
+            // readers shouldn't depend on global console state.
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
         };
 
         if (options.Environment is { } env)
