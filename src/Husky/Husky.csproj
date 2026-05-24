@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>Husky</AssemblyName>
-    <Version>0.4.3</Version>
+    <Version>0.5.0</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 
     <!-- Husky.Protocol uses System.Text.Json source-gen contexts and
