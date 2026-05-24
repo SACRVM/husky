@@ -459,8 +459,9 @@ internal sealed class HuskyApp : ConsoleOutput.IConsoleSink
 
     private void Paint(ScreenBuffer screen)
     {
-        // ScreenBuffer is sized Width × FooterRows. Row 0 = status line,
-        // row 1 = separator rule, row 2 = action bar (or a toast).
+        // ScreenBuffer is sized Width × FooterRows. Row 0 = separator rule
+        // (divides the scrollback from the footer block), row 1 = status line,
+        // row 2 = action bar (or a toast).
         if (screen.Width <= 0 || screen.Height <= 0) return;
 
         string? localName, localVer, localHealth, localCrash, localToast;
@@ -479,8 +480,8 @@ internal sealed class HuskyApp : ConsoleOutput.IConsoleSink
 
         screen.Clear(new Cell(' ', Color.LightGray, Color.Black));
 
-        DrawStatusRow(screen, 0, localName, localVer, localHealth, localCrash);
-        if (screen.Height > 1) DrawSeparatorRow(screen, 1);
+        DrawSeparatorRow(screen, 0);
+        if (screen.Height > 1) DrawStatusRow(screen, 1, localName, localVer, localHealth, localCrash);
         if (screen.Height > 2) DrawActionRow(screen, 2, localState, localToast, localToastColor);
     }
 
