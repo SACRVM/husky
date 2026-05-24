@@ -10,6 +10,13 @@ on:
 permissions:
   contents: read
 
+# Opt every bundled JavaScript action onto the Node.js 24 runtime now,
+# ahead of GitHub forcing it in June 2026. The action tags below are all
+# latest-major; some still ship a Node 20 runtime internally, and this is
+# GitHub's documented opt-in to run them on 24.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
