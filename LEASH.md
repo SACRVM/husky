@@ -913,30 +913,33 @@ The `source` block of any source-supplied config is dropped with a console warni
 Husky renders in one of two modes, picked at startup based on whether
 stdout is attached to an interactive terminal:
 
-- **TUI mode** (default on a real terminal): a fullscreen, alt-screen
-  layout with a fixed header, a scrollable log viewport, and a fixed
-  action bar. Log lines never wrap — overflow is clipped at the
-  viewport's right edge.
+- **Interactive mode** (default on a real terminal): log lines stream
+  into the terminal's **native scrollback** (no alt-screen takeover),
+  with a 3-row **sticky footer** pinned to the bottom carrying the
+  status line, a separator, and the action bar. The terminal's own
+  selection, mouse wheel, and scrollback history all keep working;
+  long lines wrap the way the terminal wraps them. Hotkeys arrive
+  through a raw-mode key loop.
 - **Line mode** (when stdout is redirected, piped, or
-  `NO_COLOR`/non-TTY environments): the legacy line-oriented stream
-  with banner + log lines. `husky | grep`, `husky > file.log`,
+  `NO_COLOR`/non-TTY environments): the line-oriented stream with
+  banner + log lines, no footer. `husky | grep`, `husky > file.log`,
   CI-style log scraping, and journald all stay first-class. Bars and
   spinners auto-degrade to a single final-frame line per operation.
 
-Detection is `Console.IsOutputRedirected == false` plus a probe for
-`Application` startup; if `Retro.Crt.Tui.Application` reports the
-terminal cannot host a fullscreen UI (very old console host, no ANSI
-support), Husky falls back to line mode without complaining.
+Detection is `Console.IsOutputRedirected == false` and not `NO_COLOR`.
+The footer (`StickyFooter`) is a no-op on non-interactive or too-small
+terminals, and if raw mode can't be entered Husky degrades to plain
+line output at run time without complaining.
 
 ### 10.2 Libraries
 
 - **[Retro.Crt](https://github.com/chloe-dream/retro-crt)** (NuGet,
-  **0.7.0+**) for color, screen buffer, input parsing, banner.
-- **Retro.Crt.Tui** (NuGet, **0.1.1+**) for the TUI layer:
-  `Application`, `LogViewer`, `StackPanel`. Loaded only in TUI mode
-  but referenced unconditionally — the package is small and
-  trim/AOT-clean. The action bar uses dot-separated hotkey hints
-  rather than focusable `Button` widgets (§10.4).
+  **0.8.0+**) for everything: color, screen buffer, banner, the
+  `StickyFooter` bottom region, and `RawMode` + `TerminalInput` for
+  the key loop. No `Retro.Crt.Tui` — the alt-screen `Application` /
+  `LogViewer` layer was dropped when Husky moved to native scrollback
+  (it only repainted on input, so a launcher fed from background
+  threads showed nothing until a keypress).
 - Pascal CRT-Unit-style API. Tiny, no third-party dependencies,
   trim- and AOT-clean.
 - Cross-platform, ANSI-capable on modern terminals; `NO_COLOR` and
@@ -953,10 +956,9 @@ The fallback used when stdout is redirected.
 On startup: Husky ASCII logo + tagline. Stored as a `string[]` in
 the launcher and rendered with `Retro.Crt.Banner.Gradient` — colour
 interpolated per line from a cool ice-blue at the top to a brighter
-cyan at the bottom. The banner renders before mode selection in
-**both** line and TUI mode so the husky portrait bookends every
-session: in TUI mode it briefly precedes the alt-screen takeover
-and is restored when the alt-screen closes on exit.
+cyan at the bottom. The banner renders once at startup in **both**
+modes; in interactive mode it scrolls up into the terminal's native
+scrollback above the footer and stays in history like any other line.
 
 ```
   <husky-ascii-art (rendered with ice-blue→cyan vertical gradient)>
@@ -991,67 +993,65 @@ parseable output. The summary line carries the authoritative result
 13:47:08  husky     fetched 6.8 MB in 4.2 s.
 ```
 
-### 10.4 TUI Mode
+### 10.4 Interactive Mode
 
-The default rendering on an interactive terminal.
+The default rendering on an interactive terminal: native scrollback
+above, a 3-row sticky footer pinned to the bottom.
 
 #### Layout
 
-The chrome is rendered on a uniform black background. Two thin
-horizontal rules — full-width `─` (U+2500) in dim grey — bracket the
-log viewport instead of header/footer fill bands:
+Log lines stream into the terminal's normal scrollback exactly like
+line mode — same `HH:mm:ss  <source>  <message>` format, same
+status-word highlights (§10.3). The only chrome is the footer, which
+the terminal keeps pinned to the bottom three rows while everything
+above scrolls in native history:
 
 ```
- husky v0.3.2          umbrella-bot v1.4.2                healthy   header (1 row)
-─────────────────────────────────────────────────────────────────  separator (1 row)
  13:47:03  husky    sniffing for updates… up to date.
- 13:47:08  app      worker started, 12 guilds connected             log viewport
- 13:47:15  husky    new version found: v1.4.3                       (star-sized)
- 13:47:15  husky    manual mode — waiting for trigger.
- …                                                            ▓
-─────────────────────────────────────────────────────────────────  separator (1 row)
- s save logs · u check & install · x exit                           action bar (1 row)
+ 13:47:08  app      worker started, 12 guilds connected     ← native scrollback
+ 13:47:15  husky    new version found: v1.4.3                 (real terminal history,
+ 13:47:15  husky    manual mode — waiting for trigger.        wheel / PgUp / selection)
+ husky v0.4.4          umbrella-bot v1.4.2          healthy  ┐ status   (footer row 1)
+───────────────────────────────────────────────────────────┤ separator (footer row 2)
+ s save logs · u check & install · x exit                   ┘ actions  (footer row 3)
 ```
 
-- **Header** (1 row, top): `husky vX.Y.Z` left-aligned in the
+- **Status row** (footer row 1): `husky vX.Y.Z` left-aligned in the
   launcher accent colour (cyan, bold); `<appName> v<appVersion>`
   centered in white; current health (`healthy`/`degraded`/`unhealthy`)
   right-aligned in its semantic colour. Pre-handshake the center is
   `(starting…)` in dim grey; while crash-restart-paused, the right
   side reads `down — restarting in 3s` in red.
-- **Separators** (1 row, top + bottom of viewport): `─` glyphs in
-  dim grey on black. They cost two rows of viewport but give the
-  chrome a clean DOS-style banded look without a busy bg fill.
-- **Log viewport** (fills): `Retro.Crt.Tui.LogViewer` with its own
-  scrollbar, autoscroll while pinned to tail, drag/wheel/keyboard
-  scrolling. Each line gets a single foreground colour matching its
-  source; mid-line styling (status-word highlights) is **not**
-  applied here — only in line mode. Lines never wrap; overflow is
-  clipped with a `…` marker at the right edge.
-- **Action bar** (1 row, bottom): three commands rendered as
+- **Separator** (footer row 2): full-width `─` (U+2500) in dim grey on
+  black, dividing the live log from the footer chrome.
+- **Action bar** (footer row 3): three commands rendered as
   dot-separated hotkey hints (`s save logs · u check & install · x exit`).
   The hotkey letter is in the launcher's accent colour and bold; the
   label is light grey on black; the middle-dot separator picks up the
-  label colour. No focusable button widgets — every command has a
-  single-letter shortcut, so Tab cycling adds nothing here.
-  Activation runs through the chrome's global hotkey routing.
+  label colour. A transient toast (e.g. the save-logs confirmation,
+  §10.4 actions) takes this row over for ~3 s.
+
+The footer is painted via `StickyFooter` (DECSTBM scroll region). It
+repaints on demand (`Refresh`) when status/health/action state change,
+and reflows itself on terminal resize.
 
 #### Hotkeys
 
-Global (handled by the root container on bubble-up, after focused
-widgets get first crack):
+A raw-mode key loop (`RawMode` + `TerminalInput.WaitForEvent`) on the
+launcher's main thread dispatches:
 
 - `s` — save logs (see §10.4 actions).
 - `u` — check & install (force a fresh source poll, apply if newer).
 - `x`, `Esc` — exit.
 
-Focus and scrolling (built-in to `Application` / `LogViewer`):
+Raw mode keeps `keepSignals: true`, so `Ctrl+C` still raises a real
+`SIGINT` handled by the launcher's signal path (§5.5) — a hung Husky
+can't swallow the user's `Ctrl+C`.
 
-- `Tab` / `Shift+Tab` — cycle focus.
-- `Enter` — activate the focused button.
-- `↑`/`↓`, `PgUp`/`PgDn`, `Home`/`End` — scroll the log viewport.
-- Mouse wheel and scrollbar drag — scroll.
-- Default focus: log viewport, pinned to tail.
+Scrolling, selection, and history are the **terminal's own** — mouse
+wheel, `PgUp`/`PgDn`, and click-drag selection all operate on native
+scrollback. Husky no longer ships an in-app scrollbar or focus model;
+there is nothing to Tab between.
 
 #### Actions
 
@@ -1110,27 +1110,30 @@ Behaviour:
 - One operation = one log line, one frozen start-timestamp during
   updates. The completion line gets a fresh timestamp.
 - Frame rate capped at 10 Hz; the 0% / 100% frames are guaranteed.
-- **TUI mode**: implemented by replacing the `LogViewer`'s tail
-  entry; new log lines (from app stdout, watchdog warnings) flow
-  in above the in-place line as normal.
+- **Interactive mode**: rewrites the current scrollback row via a
+  carriage return (`\r`). Regular log lines (app stdout, watchdog
+  warnings) that arrive while the in-place line is open are buffered
+  so they can't scroll it out of reach, then flushed below it when it
+  completes.
 - **Line mode**: degraded to start line + summary line, no in-place
   redraw — pipe-friendly (see §10.3).
 - Two in-place operations at once are a contract error and throw —
   Husky never has more than one running by design (download or
   shutdown-wait or extract or sniff — never overlapping).
 
-The `force: true` channel from the previous live-widget gate
-remains, but only for line-mode error escalations that need to bypass
-the in-place line; in TUI mode every log line goes into the viewport
-in arrival order, no escalation channel needed.
+The `force: true` channel from the previous live-widget gate remains
+for line-mode error escalations that bypass the in-place line. In
+interactive mode a forced line can't safely overwrite the animating
+row, so it is buffered like any other line — but Husky rings the bell
+(`Crt.Bell`) so the escalation isn't silently delayed.
 
 ### 10.7 Logs Are Not Files
 
 - Husky writes nothing to disk on its own. The log buffer is in-memory
   only, capped at **5 000 lines** (oldest dropped).
 - Persistence is the operator's choice: in line mode, redirect output
-  (`> husky.log` / journald). In TUI mode, the user presses `s` to
-  export the current buffer.
+  (`> husky.log` / journald). In interactive mode, the user presses
+  `s` to export the current buffer.
 - This satisfies §1.2 ("no file-based logging") — the `s` action is
   an opt-in snapshot, not a streaming log file.
 

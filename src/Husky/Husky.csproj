@@ -37,8 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Retro.Crt" Version="0.7.1" />
-    <PackageReference Include="Retro.Crt.Tui" Version="0.2.0" />
+    <PackageReference Include="Retro.Crt" Version="0.8.0" />
   </ItemGroup>
 
   <ItemGroup>

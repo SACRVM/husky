@@ -9,9 +9,9 @@ using Retro.Crt;
 Console.OutputEncoding = Encoding.UTF8;
 
 string launcherVersion = GetLauncherVersion();
-// Banner renders before any TUI takeover so the husky logo bookends the
-// session: visible at startup in both modes, and brought back when the
-// alt-screen restores on exit (LEASH §10.3).
+// Banner renders once at startup. There is no alt-screen takeover any more
+// (LEASH §10.4): the logo scrolls into the terminal's native scrollback
+// above the sticky footer and stays in history like every other line.
 Husky.Banner.Render(launcherVersion);
 
 // Step 1 — parse CLI flags (LEASH §5.2.1). Resolves --dir and the
@@ -189,13 +189,13 @@ LauncherRuntime runtime = new(
     executablePath: executablePath,
     seedUpdateInfo: bootPoll);
 
-// Step 7 — pick the rendering mode. TUI mode (LEASH §10.4) requires a
-// real interactive terminal; piping or redirection forces line mode
-// (LEASH §10.3) so `husky | grep` and `husky > log.txt` keep working.
-// `NO_COLOR` (https://no-color.org/) also forces line mode — the user
-// has asked to disable styling, and a fullscreen alt-screen UI is the
-// opposite of that. Construction failures (very old console host, no
-// ANSI, raw-mode blocked) fall back to line mode without complaining.
+// Step 7 — pick the rendering mode. Interactive mode (LEASH §10.4) layers a
+// sticky footer + hotkeys over native scrollback and needs a real terminal;
+// piping or redirection forces plain line mode (LEASH §10.3) so `husky | grep`
+// and `husky > log.txt` keep working. `NO_COLOR` (https://no-color.org/) also
+// forces line mode — the user asked for no styling, so we skip the footer
+// chrome. If raw mode or the footer can't start at run time, HuskyApp.Run
+// degrades to plain line output on its own without complaining.
 HuskyApp? tuiApp = null;
 if (!Console.IsOutputRedirected && !IsNoColorRequested())
 {
