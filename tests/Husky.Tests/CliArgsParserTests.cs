@@ -39,21 +39,21 @@ public sealed class CliArgsParserTests
     [Fact]
     public void Parse_builds_a_github_source_from_repo_flag()
     {
-        CliArgs result = Parse("--repo", "chloe-dream/husky");
+        CliArgs result = Parse("--repo", "SACRVM/husky");
 
         Assert.NotNull(result.CliSource);
         Assert.Equal(SourceConfig.GitHubType, result.CliSource.Type);
-        Assert.Equal("chloe-dream/husky", result.CliSource.Repo);
+        Assert.Equal("SACRVM/husky", result.CliSource.Repo);
         Assert.Null(result.CliSource.Asset);
     }
 
     [Fact]
     public void Parse_combines_repo_and_asset_flags()
     {
-        CliArgs result = Parse("--repo", "chloe-dream/husky", "--asset", "Husky-{version}-win-x64.zip");
+        CliArgs result = Parse("--repo", "SACRVM/husky", "--asset", "Husky-{version}-win-x64.zip");
 
         Assert.NotNull(result.CliSource);
-        Assert.Equal("chloe-dream/husky", result.CliSource.Repo);
+        Assert.Equal("SACRVM/husky", result.CliSource.Repo);
         Assert.Equal("Husky-{version}-win-x64.zip", result.CliSource.Asset);
     }
 
@@ -71,7 +71,7 @@ public sealed class CliArgsParserTests
     public void Parse_throws_when_manifest_and_repo_are_both_set()
     {
         HuskyConfigException ex = Assert.Throws<HuskyConfigException>(() =>
-            Parse("--manifest", "https://example.org/manifest.json", "--repo", "chloe-dream/husky"));
+            Parse("--manifest", "https://example.org/manifest.json", "--repo", "SACRVM/husky"));
 
         Assert.Contains("mutually exclusive", ex.Message, StringComparison.Ordinal);
     }

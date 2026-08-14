@@ -9,8 +9,8 @@
     <Company>Chloe Dream</Company>
     <Description>Slim client library for apps hosted by the Husky launcher. Drop in three lines, get clean shutdown, health probes, and standalone-mode safety for free.</Description>
     <PackageTags>husky;launcher;process;supervision;updates;hosted-service</PackageTags>
-    <PackageProjectUrl>https://github.com/chloe-dream/husky</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/chloe-dream/husky</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/SACRVM/husky</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/SACRVM/husky</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

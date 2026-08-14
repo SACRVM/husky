@@ -627,8 +627,8 @@ Each flag may appear at most once. Source flags become the top config layer (§5
 
 - `husky` — read everything from `./husky.config.json`.
 - `husky --manifest https://example.org/app/manifest.json` — no local file needed; bootstraps and runs the app described by the manifest, in cwd.
-- `husky --repo chloe-dream/the-fishbowl --dir D:\Apps\Fishbowl` — pull from a GitHub repo, run inside the named install directory.
-- `husky --repo chloe-dream/the-fishbowl --asset 'Fishbowl-{version}-win-x64.zip'` — same with a specific asset pattern.
+- `husky --repo SACRVM/the-fishbowl --dir D:\Apps\Fishbowl` — pull from a GitHub repo, run inside the named install directory.
+- `husky --repo SACRVM/the-fishbowl --asset 'Fishbowl-{version}-win-x64.zip'` — same with a specific asset pattern.
 
 ### 5.3 Boot Sequence
 
@@ -933,7 +933,7 @@ line output at run time without complaining.
 
 ### 10.2 Libraries
 
-- **[Retro.Crt](https://github.com/chloe-dream/retro-crt)** (NuGet,
+- **[Retro.Crt](https://github.com/SACRVM/retro-crt)** (NuGet,
   **0.8.0+**) for everything: color, screen buffer, banner, the
   `StickyFooter` bottom region, and `RawMode` + `TerminalInput` for
   the key loop. No `Retro.Crt.Tui` — the alt-screen `Application` /
@@ -1242,7 +1242,7 @@ Not specified, not committed — sketches for later, when v1.0 is in the wild an
 v1.0 covers the protocol, the capability handshake, and config layering (local + source-supplied + defaults — see §5.2). What v1.0 does **not** cover is the user-facing distribution story: how does someone without prior Husky knowledge actually run an app like Fishbowl? Sketches for later, all additive on top of the v1.0 layering:
 
 - **More CLI overrides.** v1.0 ships `--manifest` / `--repo` / `--asset` / `--dir` (§5.2.1). Future flags could override individual config fields too: `--exec Z.exe`, `--name foo`, `--check 30`. Same merge layer, just more knobs.
-- **Slug invocation.** `husky chloe-dream/the-fishbowl`. The slug is the source — Husky points at GitHub, pulls the latest release's `husky.config.json` (already a v1.0 mechanism via §9.2), runs. No local file, no flags. Most natural once Husky is on PATH.
+- **Slug invocation.** `husky SACRVM/the-fishbowl`. The slug is the source — Husky points at GitHub, pulls the latest release's `husky.config.json` (already a v1.0 mechanism via §9.2), runs. No local file, no flags. Most natural once Husky is on PATH.
 - **Global install story.** winget / brew / install.sh / scoop. Makes slug invocation natural — install Husky once, then any Husky-ready app is one command. Always parallel to portable bundled-binary deployments, never mandatory.
 - **`husky init` subcommand.** Guided Claude-Code-style prompt sequence (4-5 questions) that writes a `husky.config.json`. For app authors committing one to their repo, or users authoring a local override. Sequential prompts only — no TUI forms (Retro.Crt forms layer is explicitly *not* a prerequisite).
 - **`husky-package` GitHub Action.** Reusable Action that drops into a release workflow, produces a ZIP with `Husky.exe` (correct RID) + generated `husky.config.json` as a release asset. The natural deployment artifact for app authors who want a one-file download for their users.

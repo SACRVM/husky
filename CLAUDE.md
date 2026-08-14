@@ -55,7 +55,7 @@ Beim Session-Start alle `.firepit/inbox/*.md` lesen und verarbeiten. Erledigtes 
 - Add features not in [LEASH.md](./LEASH.md) — ask first.
 - Add config knobs "for flexibility."
 - Inject DI containers, mediators, CQRS into a 3-project tool.
-- Use `Microsoft.Extensions.Logging` for launcher user-facing output — that is [Retro.Crt](https://github.com/chloe-dream/retro-crt) (`Crt`, `Banner`, `ProgressBar`, `Log`). MEL is fine for internal diagnostics only.
+- Use `Microsoft.Extensions.Logging` for launcher user-facing output — that is [Retro.Crt](https://github.com/SACRVM/retro-crt) (`Crt`, `Banner`, `ProgressBar`, `Log`). MEL is fine for internal diagnostics only.
 - Add NuGet packages casually — if LEASH does not name it, ask.
 - Leave silent `TODO`s — surface them in the status update.
 - Use AI clichés in user-visible text ("delve into", "navigate the landscape of"). Husky is curt.

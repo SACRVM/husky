@@ -1,6 +1,6 @@
 # Husky.Client
 
-Slim client library for apps hosted by [Husky](https://github.com/chloe-dream/husky), the generic .NET app launcher.
+Slim client library for apps hosted by [Husky](https://github.com/SACRVM/husky), the generic .NET app launcher.
 
 ## Install
 
@@ -8,7 +8,7 @@ Slim client library for apps hosted by [Husky](https://github.com/chloe-dream/hu
 dotnet add package Husky.Client
 ```
 
-Targets `net10.0`. Pair it with the matching `Husky.exe` launcher from the [releases page](https://github.com/chloe-dream/husky/releases).
+Targets `net10.0`. Pair it with the matching `Husky.exe` launcher from the [releases page](https://github.com/SACRVM/husky/releases).
 
 ## Quick start — auto updates (the default)
 

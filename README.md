@@ -84,7 +84,7 @@ See [`samples/`](./samples) for full templates.
 
 > **Option A — one-liner.** No config file needed.
 >
-> 1. Download the launcher binary for your OS from the [Husky releases page](https://github.com/chloe-dream/husky/releases). Extract `Husky.exe` (Windows) or `Husky` (Linux).
+> 1. Download the launcher binary for your OS from the [Husky releases page](https://github.com/SACRVM/husky/releases). Extract `Husky.exe` (Windows) or `Husky` (Linux).
 > 2. From the directory where the app should live, run:
 >    ```
 >    Husky --repo your-org/your-app
@@ -97,7 +97,7 @@ See [`samples/`](./samples) for full templates.
 
 > **Option B — drop in a config file.** Useful when users want the launcher and config to travel together.
 >
-> 1. Download the launcher binary for your OS from the [Husky releases page](https://github.com/chloe-dream/husky/releases). Extract `Husky.exe` (Windows) or `Husky` (Linux).
+> 1. Download the launcher binary for your OS from the [Husky releases page](https://github.com/SACRVM/husky/releases). Extract `Husky.exe` (Windows) or `Husky` (Linux).
 > 2. Save it in a folder of your choice. Next to it, create `husky.config.json`:
 >    ```json
 >    { "source": { "type": "github", "repo": "your-org/your-app" } }
@@ -110,12 +110,12 @@ Many app distributors ship a one-file installer that bundles Husky for you — i
 
 **Step-by-step:**
 
-1. Download the launcher binary for your OS from the [Husky releases page](https://github.com/chloe-dream/husky/releases). Pick the trim build (`husky-<rid>.zip` / `.tar.gz`); the `-aot` variant is a smaller native build with the same behaviour. Extract `Husky.exe` (Windows) or `Husky` (Linux).
+1. Download the launcher binary for your OS from the [Husky releases page](https://github.com/SACRVM/husky/releases). Pick the trim build (`husky-<rid>.zip` / `.tar.gz`); the `-aot` variant is a smaller native build with the same behaviour. Extract `Husky.exe` (Windows) or `Husky` (Linux).
 2. Make a folder somewhere portable — Desktop, USB stick, `~/apps/fishbowl/`, anywhere.
 3. From inside that folder, run the launcher with the source on the command line:
 
    ```
-   Husky --repo chloe-dream/the-fishbowl
+   Husky --repo SACRVM/the-fishbowl
    ```
 
    For an HTTP-manifest source:
@@ -129,7 +129,7 @@ Many app distributors ship a one-file installer that bundles Husky for you — i
 4. (Alternative) If you'd rather have the config travel with the folder, drop a `husky.config.json` next to the binary and run `Husky` with no arguments:
 
    ```json
-   { "source": { "type": "github", "repo": "chloe-dream/the-fishbowl" } }
+   { "source": { "type": "github", "repo": "SACRVM/the-fishbowl" } }
    ```
 
 5. First run pulls the app's deployment metadata (`name`, `executable`, timing knobs) from the source itself, downloads the latest release into `app/`, and starts it. From there: auto-updates (or manual, if the app prefers — its UI will tell you).
@@ -139,7 +139,7 @@ The folder is fully self-contained — your app's data lives in `app/data/` and 
 **Working directory.** Husky operates against the current working directory by default. If the launcher lives on `PATH` and the install is somewhere else, point at it with `--dir`:
 
 ```
-Husky --repo chloe-dream/the-fishbowl --dir D:\Apps\Fishbowl
+Husky --repo SACRVM/the-fishbowl --dir D:\Apps\Fishbowl
 ```
 
 **One-shot PowerShell bootstrap (Windows).** The launcher's release assets are versionless, so a tiny script next to your install can fetch Husky on first run and start it on every run — no manual download, no `husky.config.json`. Drop this into `Run.ps1` next to where you want the app installed:
@@ -151,7 +151,7 @@ $exe = Join-Path $dir 'Husky.exe'
 
 if (-not (Test-Path $exe)) {
     $zip = Join-Path $env:TEMP 'husky.zip'
-    Invoke-WebRequest 'https://github.com/chloe-dream/husky/releases/latest/download/husky-win-x64.zip' -OutFile $zip -UseBasicParsing
+    Invoke-WebRequest 'https://github.com/SACRVM/husky/releases/latest/download/husky-win-x64.zip' -OutFile $zip -UseBasicParsing
     Expand-Archive $zip $dir -Force
     Remove-Item $zip
 }
