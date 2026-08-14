@@ -46,6 +46,10 @@ English. Small and focused, one logical change each. Format `<type>: <summary>` 
 
 After each Appendix-A step: what's done, what's next, decisions you made or need Chloe on, anything skipped or compromised — flag it.
 
+## Firepit-Inbox
+
+Beim Session-Start alle `.firepit/inbox/*.md` lesen und verarbeiten. Erledigtes mit `firepit_inbox_complete` markieren (verschiebt nach `inbox/processed/`). Tool lädt erst nach Claude-Code-Neustart — fehlt es, neu starten.
+
 ## Never do
 
 - Add features not in [LEASH.md](./LEASH.md) — ask first.

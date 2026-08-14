@@ -47,3 +47,9 @@ download/
 # Claude Code — personal/local state. .claude/commands/ is checked in.
 .claude/settings.local.json
 .claude/*.lock
+.claude/agent-memory/
+
+# Firepit — shared declarative config is checked in; runtime artifacts stay local.
+.firepit/inbox/
+.firepit/runs/
+!.firepit/config.json
