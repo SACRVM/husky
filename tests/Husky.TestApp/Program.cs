@@ -6,6 +6,7 @@ const string ModeSlowShutdown = "slow-shutdown";
 const string ModeWait = "wait";
 const string ModeCrash = "crash";
 const string ModeManualUpdate = "manual-update";
+const string ModeSelfUpdate = "self-update";
 
 string mode = Environment.GetEnvironmentVariable(ModeEnvVar) ?? ModeNormal;
 
@@ -73,6 +74,45 @@ switch (mode)
             Console.Out.WriteLine($"testapp: shutdown received (reason={reason}).");
             Console.Out.Flush();
             return Task.CompletedTask;
+        });
+        break;
+
+    case ModeSelfUpdate:
+        // Poll the launcher over the pipe until the source advertises an
+        // update, then pull the trigger. Lets E2E tests drive the
+        // mid-session update path (update-check → update-now) without
+        // waiting for the launcher's polling cadence.
+        client.OnShutdown((reason, _) =>
+        {
+            Console.Out.WriteLine($"testapp: shutdown received (reason={reason}).");
+            Console.Out.Flush();
+            return Task.CompletedTask;
+        });
+        _ = Task.Run(async () =>
+        {
+            while (!client.ShutdownToken.IsCancellationRequested)
+            {
+                try
+                {
+                    HuskyUpdateInfo? update = await client.CheckForUpdateAsync(client.ShutdownToken);
+                    if (update is not null)
+                    {
+                        Console.Out.WriteLine($"testapp: update found (new={update.NewVersion}) — requesting update.");
+                        Console.Out.Flush();
+                        await client.RequestUpdateAsync(client.ShutdownToken);
+                        return;
+                    }
+                }
+                catch (OperationCanceledException) { return; }
+                catch (Exception ex)
+                {
+                    Console.Out.WriteLine($"testapp: update check failed ({ex.Message}) — retrying.");
+                    Console.Out.Flush();
+                }
+
+                try { await Task.Delay(TimeSpan.FromMilliseconds(250), client.ShutdownToken); }
+                catch (OperationCanceledException) { return; }
+            }
         });
         break;
 

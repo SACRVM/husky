@@ -184,6 +184,7 @@ internal sealed class LauncherRuntime(
 
             // Session ended. If an update is driving this exit, hand control
             // back to the polling tick — it owns the next session.
+            bool updateFailed = false;
             Task<bool>? updateAwait = TakeUpdateInFlight();
             if (updateAwait is not null)
             {
@@ -193,63 +194,77 @@ internal sealed class LauncherRuntime(
 
                 if (updateOk && CurrentSession is not null) continue;
 
-                // Update aborted with no fresh session — fall through to the
-                // crash path so the restart policy applies.
+                // Update aborted with no fresh session. The old session was
+                // stopped on purpose, so its clean exit code means nothing —
+                // never interpret it as "app is done" (that would end the
+                // launcher). Route into the restart policy instead (§7.3.6);
+                // the new build is already installed, so a retried start
+                // usually recovers.
+                updateFailed = true;
             }
 
             int exitCode = session.ExitCode;
             await DisposeCurrentSessionAsync().ConfigureAwait(false);
 
-            if (exitCode == 0)
+            if (exitCode == 0 && !updateFailed)
             {
                 ConsoleOutput.Husky($"{config.Name} exited cleanly.");
                 return ExitCodes.Ok;
             }
 
-            ConsoleOutput.Husky($"{config.Name} exited with code {exitCode} — considering restart.");
+            ConsoleOutput.Husky(updateFailed
+                ? $"update failed to bring {config.Name} back — considering restart."
+                : $"{config.Name} exited with code {exitCode} — considering restart.");
 
-            if (!restartPolicy.CanRestart())
+            // Retry under the restart policy until a start sticks or the cap
+            // trips and we park (§8.4). A failed start attempt must never end
+            // the launcher — only a graceful interrupt exits from here.
+            while (true)
             {
-                ConsoleOutput.Husky("enough. lying down.");
-                bool revived = await ParkUntilUpdateOrInterruptAsync(graceful).ConfigureAwait(false);
-                if (!revived) return ExitCodes.Ok;
-
-                ConsoleOutput.Husky("update brought a fresh build — back online.");
-                continue;
-            }
-
-            ConsoleOutput.Husky($"pausing {config.RestartPauseSec}s before restart.");
-            try
-            {
-                // §10.4: while we're between crash and restart, the
-                // header's right slot reads 'down — restarting in Ns'
-                // in red. Tickle once a second so the countdown is live.
-                for (int s = config.RestartPauseSec; s > 0; s--)
+                if (!restartPolicy.CanRestart())
                 {
-                    ConsoleOutput.SetCrashRestart($"down — restarting in {s}s");
-                    await Task.Delay(TimeSpan.FromSeconds(1), graceful).ConfigureAwait(false);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                ConsoleOutput.SetCrashRestart(null);
-                return ExitCodes.Ok;
-            }
-            ConsoleOutput.SetCrashRestart(null);
+                    ConsoleOutput.Husky("enough. lying down.");
+                    bool revived = await ParkUntilUpdateOrInterruptAsync(graceful).ConfigureAwait(false);
+                    if (!revived) return ExitCodes.Ok;
 
-            restartPolicy.RecordAttempt();
-            try
-            {
-                AppSession revived = await StartSessionAsync(graceful).ConfigureAwait(false);
-                AnnounceUp(revived);
-            }
-            catch (OperationCanceledException) when (graceful.IsCancellationRequested)
-            {
-                return ExitCodes.Ok;
-            }
-            catch (Exception ex)
-            {
-                ConsoleOutput.Husky($"restart failed: {ex.Message}");
+                    ConsoleOutput.Husky("update brought a fresh build — back online.");
+                    break;
+                }
+
+                ConsoleOutput.Husky($"pausing {config.RestartPauseSec}s before restart.");
+                try
+                {
+                    // §10.4: while we're between crash and restart, the
+                    // header's right slot reads 'down — restarting in Ns'
+                    // in red. Tickle once a second so the countdown is live.
+                    for (int s = config.RestartPauseSec; s > 0; s--)
+                    {
+                        ConsoleOutput.SetCrashRestart($"down — restarting in {s}s");
+                        await Task.Delay(TimeSpan.FromSeconds(1), graceful).ConfigureAwait(false);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    ConsoleOutput.SetCrashRestart(null);
+                    return ExitCodes.Ok;
+                }
+                ConsoleOutput.SetCrashRestart(null);
+
+                restartPolicy.RecordAttempt();
+                try
+                {
+                    AppSession revived = await StartSessionAsync(graceful).ConfigureAwait(false);
+                    AnnounceUp(revived);
+                    break;
+                }
+                catch (OperationCanceledException) when (graceful.IsCancellationRequested)
+                {
+                    return ExitCodes.Ok;
+                }
+                catch (Exception ex)
+                {
+                    ConsoleOutput.Husky($"restart failed: {ex.Message}");
+                }
             }
         }
     }
