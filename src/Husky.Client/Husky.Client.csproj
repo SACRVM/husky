@@ -4,7 +4,7 @@
     <IsPackable>true</IsPackable>
 
     <PackageId>Husky.Client</PackageId>
-    <Version>0.1.4</Version>
+    <Version>0.1.5</Version>
     <Authors>Chloe Dream</Authors>
     <Company>Chloe Dream</Company>
     <Description>Slim client library for apps hosted by the Husky launcher. Drop in three lines, get clean shutdown, health probes, and standalone-mode safety for free.</Description>
