@@ -10,7 +10,7 @@ public sealed class HuskyConfigLoaderTests
           "executable": "app/UmbrellaBot.exe",
           "source": {
             "type": "github",
-            "repo": "chloe/umbrella-bot",
+            "repo": "acme/umbrella-bot",
             "asset": "UmbrellaBot-{version}.zip"
           }
         }
@@ -38,7 +38,7 @@ public sealed class HuskyConfigLoaderTests
         Assert.Equal("app/UmbrellaBot.exe", config.Executable);
         Assert.NotNull(config.Source);
         Assert.Equal(SourceConfig.GitHubType, config.Source.Type);
-        Assert.Equal("chloe/umbrella-bot", config.Source.Repo);
+        Assert.Equal("acme/umbrella-bot", config.Source.Repo);
         Assert.Equal("UmbrellaBot-{version}.zip", config.Source.Asset);
         Assert.False(config.Source.AllowPreRelease);
         Assert.Null(config.CheckMinutes);

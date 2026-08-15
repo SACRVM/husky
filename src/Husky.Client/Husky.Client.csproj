@@ -5,8 +5,8 @@
 
     <PackageId>Husky.Client</PackageId>
     <Version>0.1.5</Version>
-    <Authors>Chloe Dream</Authors>
-    <Company>Chloe Dream</Company>
+    <Authors>SACRVM</Authors>
+    <Company>SACRVM</Company>
     <Description>Slim client library for apps hosted by the Husky launcher. Drop in three lines, get clean shutdown, health probes, and standalone-mode safety for free.</Description>
     <PackageTags>husky;launcher;process;supervision;updates;hosted-service</PackageTags>
     <PackageProjectUrl>https://github.com/SACRVM/husky</PackageProjectUrl>
@@ -15,7 +15,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Copyright>Copyright (c) 2026 Chloe Dream</Copyright>
+    <Copyright>Copyright (c) 2026 SACRVM</Copyright>
 
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>

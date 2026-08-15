@@ -10,7 +10,7 @@ public sealed class GitHubUpdateSourceTests
     public async Task CheckForUpdateAsync_returns_update_when_remote_version_is_newer()
     {
         await using FakeHttpServer server = FakeHttpServer.StartEmpty();
-        server.MapJson("/repos/chloe/umbrella/releases/latest", """
+        server.MapJson("/repos/acme/umbrella/releases/latest", """
             {
               "tag_name": "v1.4.3",
               "draft": false,
@@ -23,7 +23,7 @@ public sealed class GitHubUpdateSourceTests
             """);
 
         using HttpClient http = new();
-        GitHubUpdateSource source = new(http, server.Address, "chloe/umbrella", "UmbrellaBot-{version}.zip", "0.1.0", rawBase: server.Address);
+        GitHubUpdateSource source = new(http, server.Address, "acme/umbrella", "UmbrellaBot-{version}.zip", "0.1.0", rawBase: server.Address);
 
         UpdateInfo? update = await source.CheckForUpdateAsync("1.4.2", CancellationToken.None);
 

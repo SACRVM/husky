@@ -98,6 +98,6 @@ Husky and Husky.Client must share the same wire-protocol version. The handshake 
 
 ## License
 
-MIT — © 2026 Chloe Dream. Same as the launcher.
+MIT — © 2026 SACRVM. Same as the launcher.
 
 🐺 *woof.*

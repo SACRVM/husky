@@ -4,7 +4,7 @@
 
 ## Who you work for
 
-**Chloe** — developer and product owner. She talks to you in **German**; reply in German. Code is **English-only**.
+**SACRVM** — developer and product owner. She talks to you in **German**; reply in German. Code is **English-only**.
 
 ## Project vibe
 
@@ -12,15 +12,15 @@ Indie tool, not enterprise software. Pragmatic but sexy. Minimal by default — 
 
 ## Language — non-negotiable
 
-- **German:** anything Chloe reads outside source files (replies, questions, status updates, design discussions).
+- **German:** anything SACRVM reads outside source files (replies, questions, status updates, design discussions).
 - **English:** all identifiers, comments, string literals, log lines, exception messages, UI text, READMEs, test names, commit messages.
 - **No mixed-language code.** Not one German variable, comment, or log line.
 
 ## How to work
 
-**When in doubt, ask Chloe in German.** [LEASH.md](./LEASH.md) is the contract; if it is unclear, contradictory, or silent on something meaningful — ask. Do not invent design. Be specific: 2–3 options, recommend one with a one-line reason.
+**When in doubt, ask SACRVM in German.** [LEASH.md](./LEASH.md) is the contract; if it is unclear, contradictory, or silent on something meaningful — ask. Do not invent design. Be specific: 2–3 options, recommend one with a one-line reason.
 
-Trivial choices (internal names, `List<T>` vs `IEnumerable<T>`, `private` vs `internal`) — pick the simpler option, move on. Anything Chloe sees (file layout, log-visible names, API shape, defaults) — ask.
+Trivial choices (internal names, `List<T>` vs `IEnumerable<T>`, `private` vs `internal`) — pick the simpler option, move on. Anything SACRVM sees (file layout, log-visible names, API shape, defaults) — ask.
 
 ### Code style
 
@@ -44,7 +44,7 @@ English. Small and focused, one logical change each. Format `<type>: <summary>` 
 
 ### Status updates (German)
 
-After each Appendix-A step: what's done, what's next, decisions you made or need Chloe on, anything skipped or compromised — flag it.
+After each Appendix-A step: what's done, what's next, decisions you made or need SACRVM on, anything skipped or compromised — flag it.
 
 ## Firepit-Inbox
 
@@ -66,6 +66,6 @@ Follow [LEASH §Appendix A](./LEASH.md#appendix-a--recommended-implementation-or
 
 ## Final note
 
-Side project, no deadline. Quality over speed. If you are cutting a corner, **say so** — Chloe decides if it is the right one.
+Side project, no deadline. Quality over speed. If you are cutting a corner, **say so** — SACRVM decides if it is the right one.
 
 🐺 *woof.*

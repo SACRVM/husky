@@ -12,7 +12,7 @@ This document is the complete specification for an initial implementation. It is
 
 This specification lives in English so it can sit comfortably in the Git repository alongside the code.
 
-**However:** the developer (Chloe) communicates in **German**. All clarifications, design discussions, status updates, and explanations directed at the developer must be in **German**. Code remains **English-only** in every aspect: identifiers, comments, string literals, commits, READMEs.
+**However:** the developer (SACRVM) communicates in **German**. All clarifications, design discussions, status updates, and explanations directed at the developer must be in **German**. Code remains **English-only** in every aspect: identifiers, comments, string literals, commits, READMEs.
 
 See [CLAUDE.md](./CLAUDE.md) for the full working agreement.
 
@@ -554,7 +554,7 @@ The merge is field-by-field: a non-null value at a higher layer fills the slot; 
 {
   "source": {
     "type": "github",
-    "repo": "chloe/umbrella-bot",
+    "repo": "acme/umbrella-bot",
     "asset": "UmbrellaBot-{version}.zip"
   },
 
@@ -835,7 +835,7 @@ internal sealed record SourceSuppliedConfig(
 ```json
 "source": {
   "type": "github",
-  "repo": "chloe/umbrella-bot",
+  "repo": "acme/umbrella-bot",
   "asset": "UmbrellaBot-{version}.zip"
 }
 ```
@@ -869,7 +869,7 @@ The `source` block of any source-supplied config is dropped with a console warni
 ```json
 "source": {
   "type": "http",
-  "manifest": "https://chloe.neocities.org/x7k3p2-9f4q/umbrella/manifest.json"
+  "manifest": "https://example.com/x7k3p2-9f4q/umbrella/manifest.json"
 }
 ```
 
@@ -878,7 +878,7 @@ The `source` block of any source-supplied config is dropped with a console warni
 ```json
 {
   "version": "1.4.3",
-  "url": "https://chloe.neocities.org/x7k3p2-9f4q/umbrella/UmbrellaBot-1.4.3.zip",
+  "url": "https://example.com/x7k3p2-9f4q/umbrella/UmbrellaBot-1.4.3.zip",
   "sha256": "9b74c9897bac770ffc029102a200c5de",
   "config": {
     "name": "umbrella-bot",

@@ -4,7 +4,7 @@
 
   "source": {
     "type": "http",
-    "manifest": "https://chloe.example/x7k3p2-9f4q/umbrella/manifest.json"
+    "manifest": "https://example.com/x7k3p2-9f4q/umbrella/manifest.json"
   },
 
   "checkMinutes": 60,
