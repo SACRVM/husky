@@ -4,7 +4,7 @@
 
 ## Who you work for
 
-**SACRVM** — developer and product owner. She talks to you in **German**; reply in German. Code is **English-only**.
+**SACRVM** — developer and product owner. Communicates with you in **German**; reply in German. Code is **English-only**.
 
 ## Project vibe
 
