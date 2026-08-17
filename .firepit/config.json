@@ -1,8 +1,10 @@
 {
+  "commands": [
+    { "name": "GitHub", "type": "url", "url": "https://github.com/SACRVM/husky", "icon": "🐙" }
+  ],
   "version": 1,
   "id": "husky",
 
   "quickLinks": [
-    { "name": "GitHub", "url": "https://github.com/SACRVM/husky" }
   ]
 }
