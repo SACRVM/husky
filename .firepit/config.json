@@ -1,10 +1,14 @@
 {
-  "commands": [
-    { "name": "GitHub", "type": "url", "url": "https://github.com/SACRVM/husky", "icon": "🐙" }
-  ],
   "version": 1,
   "id": "husky",
 
-  "quickLinks": [
+  "commands": [
+    {
+      "group": "Git",
+      "name": "repo",
+      "description": "Opens this repository on GitHub.",
+      "type": "url",
+      "url": "https://github.com/SACRVM/husky"
+    }
   ]
 }
