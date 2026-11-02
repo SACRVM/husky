@@ -7,7 +7,7 @@ argument-hint: [test|patch|minor|major|<x.y.z>]
 
 You are cutting a Husky **launcher** release (the `Husky.exe` artifact).
 Follow these steps **exactly**, in order. **Never skip the confirmation
-step.** Speak to Chloe in German; commit messages and tag names stay
+step.** Speak to SACRVM in German; commit messages and tag names stay
 English.
 
 `Husky.Client` (the NuGet package consumed by hosted apps) versions
@@ -29,7 +29,7 @@ before invoking this command.
 
 ## Step 1 — Sanity checks
 
-Run all four. If any fails, stop and report to Chloe — do not proceed.
+Run all four. If any fails, stop and report to SACRVM — do not proceed.
 
 ```bash
 git rev-parse --abbrev-ref HEAD                                    # must be 'main'
@@ -70,7 +70,7 @@ Compute `new_version` from the current csproj version (NOT from the tag, in case
 
 ## Step 4 — Show the plan, ask for confirmation
 
-Print to Chloe in German, exactly like:
+Print to SACRVM in German, exactly like:
 
 ```
 Letzter Tag:           v0.2.1
@@ -94,9 +94,9 @@ nuget.org as a side effect:
 Husky.Client <Version>: 0.2.0 (NEU — wird zu nuget.org gepusht)
 ```
 
-**If `$ARGUMENTS` is `test`: stop here. Do not change any files. Tell Chloe „Trockenlauf — nichts geändert."**
+**If `$ARGUMENTS` is `test`: stop here. Do not change any files. Tell SACRVM „Trockenlauf — nichts geändert."**
 
-Otherwise: ask **„OK so? [j/n]"** and wait for her answer.
+Otherwise: ask **„OK so? [j/n]"** and wait for the answer.
 - `j` / `ja` / `y` / `yes` → continue to Step 5
 - anything else → abort, change nothing
 
@@ -116,8 +116,8 @@ dotnet build Husky.sln --configuration Release --nologo
 ```
 
 Catches compile errors locally before the tag goes out. If it fails,
-**stop**, show the error to Chloe, leave the working tree as-is so
-she can inspect — do not commit, do not tag, do not push.
+**stop**, show the error to SACRVM, leave the working tree as-is so
+SACRVM can inspect — do not commit, do not tag, do not push.
 
 (The release workflow runs `dotnet test` on the matrix runners, so
 we skip the test pass here for speed. If the user wants the full gate
@@ -139,7 +139,7 @@ the repo's `.claude` config disables it).
 
 ## Step 8 — Hand off
 
-Tell Chloe in German:
+Tell SACRVM in German:
 
 ```
 Release vNEW ist raus.
@@ -147,7 +147,7 @@ Release vNEW ist raus.
 - Per-OS Binärartefakte (win-x64 + linux-x64, trim + AOT) ~5-8 min
 - Husky.Client NuGet wird gepackt und gepusht (skip-duplicate falls Version unverändert)
 - GitHub Release wird automatisch erstellt mit generated release notes + Asset-Anhängen
-- CI-Status: https://github.com/chloe-dream/husky/actions
+- CI-Status: https://github.com/SACRVM/husky/actions
 ```
 
 Do **not** poll or wait for the CI run — just hand off.
@@ -159,5 +159,5 @@ Do **not** poll or wait for the CI run — just hand off.
 - Never touch `.csproj` fields other than `<Version>` (and never
   Husky.Client.csproj at all from this command).
 - If anything is unclear or smells wrong (e.g., no commits since last
-  tag, csproj/tag version mismatch, weird state), stop and ask Chloe
+  tag, csproj/tag version mismatch, weird state), stop and ask SACRVM
   instead of guessing.
