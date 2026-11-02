@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Runtime.Versioning;
 using Retro.Crt;
 
 namespace Husky;
@@ -50,5 +51,27 @@ internal static class UpdateExtractor
         if (!File.Exists(expectedAbsolute))
             throw new UpdateException(
                 $"Update package is missing the expected executable at '{expectedExecutableRelativePath}'.");
+
+        if (!OperatingSystem.IsWindows())
+            EnsureExecutable(expectedAbsolute);
+    }
+
+    /// <summary>
+    /// A zip made on Windows (or by PowerShell's Compress-Archive anywhere)
+    /// stores no Unix mode, so the entry extracts as 0644 and the app fails
+    /// to start with "Permission denied". Add execute wherever read is
+    /// granted, like <c>chmod +x</c>. Phase 2's copy carries the mode over
+    /// into the install directory.
+    /// </summary>
+    [UnsupportedOSPlatform("windows")]
+    private static void EnsureExecutable(string path)
+    {
+        UnixFileMode mode = File.GetUnixFileMode(path);
+        if (mode.HasFlag(UnixFileMode.UserExecute)) return;
+
+        mode |= UnixFileMode.UserExecute;
+        if (mode.HasFlag(UnixFileMode.GroupRead)) mode |= UnixFileMode.GroupExecute;
+        if (mode.HasFlag(UnixFileMode.OtherRead)) mode |= UnixFileMode.OtherExecute;
+        File.SetUnixFileMode(path, mode);
     }
 }

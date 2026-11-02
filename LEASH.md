@@ -732,6 +732,7 @@ In cases 1–4 the app is currently running. In case 5 it is not.
 4. Extract the ZIP into `download/extracted/`.
 5. Sanity check: does the executable exist at the expected path inside `extracted/`?
    - Expected path: identical to the configured `executable` path. So if `executable: "app/UmbrellaBot.exe"`, then `download/extracted/app/UmbrellaBot.exe` must exist.
+   - On Linux/macOS: if the executable lacks the execute bit, add it wherever read is granted (like `chmod +x`). A ZIP made on Windows, or by PowerShell's `Compress-Archive`, stores no Unix mode. The copy in Phase 2 carries the mode into the install directory.
 6. **If Phase 1 fails**: abort the update, the app continues unaffected, retry on next check cycle.
 
 ### 7.3 Phase 2 — Cutover (App Downtime ≈ Seconds)
@@ -1148,6 +1149,7 @@ row, so it is buffered like any other line — but Husky rings the bell
 | Pipe backend | real named pipe | Unix domain socket (`/tmp/CoreFxPipe_<name>`) |
 | Pipe ACL | `PipeSecurity` with the current user | default filesystem permissions are sufficient |
 | Process tree kill | `Process.Kill(entireProcessTree: true)` | same (.NET supports it from .NET 5+) |
+| Execute bit | not applicable | set on the executable after extracting (§7.2) |
 | Service integration | not Husky's concern | not Husky's concern |
 
 ### 11.2 Platform Conditionals

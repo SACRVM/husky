@@ -20,6 +20,28 @@ public sealed class UpdateExtractorTests
     }
 
     [Fact]
+    public void Extract_makes_the_executable_runnable_when_the_zip_carries_no_unix_mode()
+    {
+        if (OperatingSystem.IsWindows()) return;
+
+        // FakeReleaseBuilder writes entries without Unix attributes, the way
+        // a zip made on Windows looks; they extract as 0644.
+        using TempDirectory temp = TempDirectory.Create();
+        string zipPath = FakeRelease.Valid().BuildZip(temp.Path, "package.zip");
+        string extracted = Path.Combine(temp.Path, "extracted");
+
+        UpdateExtractor.Extract(zipPath, extracted, "app/Husky.TestApp.exe");
+
+        UnixFileMode exe = File.GetUnixFileMode(Path.Combine(extracted, "app", "Husky.TestApp.exe"));
+        Assert.True(exe.HasFlag(UnixFileMode.UserExecute));
+        Assert.Equal(exe.HasFlag(UnixFileMode.GroupRead), exe.HasFlag(UnixFileMode.GroupExecute));
+        Assert.Equal(exe.HasFlag(UnixFileMode.OtherRead), exe.HasFlag(UnixFileMode.OtherExecute));
+
+        UnixFileMode companion = File.GetUnixFileMode(Path.Combine(extracted, "app", "release.notes"));
+        Assert.False(companion.HasFlag(UnixFileMode.UserExecute));
+    }
+
+    [Fact]
     public void Extract_throws_when_the_executable_is_missing_from_the_package()
     {
         using TempDirectory temp = TempDirectory.Create();
