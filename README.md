@@ -54,6 +54,8 @@ The launcher will only push `update-available` to apps that actually declared th
 
 See [`src/Husky.Client/README.md`](./src/Husky.Client/README.md) for the full client surface.
 
+**Not on .NET?** Any language works. Read `HUSKY_PIPE`, connect, and speak a handful of JSON lines: `hello`, `heartbeat`, `pong`, `shutdown-ack`. [LEASH §3.8](./LEASH.md#38-clients-in-other-languages) lists what the app must do. [matchmaker's `husky.rs`](https://github.com/SACRVM/matchmaker/blob/main/server/src/husky.rs) does it in about 120 lines of Rust.
+
 ### 2. You're a **distributor** — ship your Husky-ready app to users
 
 You publish releases via GitHub or any HTTPS host. Two things happen:

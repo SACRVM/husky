@@ -372,6 +372,36 @@ Reply to `set-update-mode`.
 - Records with `[JsonPolymorphic]` and `[JsonDerivedType]` for the message hierarchy are clean, but for v1 a dispatch switch over `type` is sufficient.
 - All records should use `init` properties, not mutable setters.
 
+### 3.8 Clients in Other Languages
+
+Husky.Client (§4) is the .NET client. An app written in anything else speaks the protocol itself; there is no client package per language. The baseline is about a hundred lines. [matchmaker's `server/src/husky.rs`](https://github.com/SACRVM/matchmaker/blob/main/server/src/husky.rs) is a working Rust example (tokio, serde_json).
+
+**Finding the pipe.** Read `HUSKY_PIPE` (§3.1). If it is unset, run standalone.
+
+- **Windows:** open the named pipe `\\.\pipe\<HUSKY_PIPE>`. Retry briefly while it reports busy (`ERROR_PIPE_BUSY`, 231).
+- **Linux / macOS:** connect a Unix domain socket at `<temp>/CoreFxPipe_<HUSKY_PIPE>`, where `<temp>` is `$TMPDIR`, or `/tmp` when it is unset. That is where .NET's `NamedPipeServerStream` binds the pipe. The app inherits Husky's environment, so both sides resolve the same folder.
+
+**What the app must do:**
+
+1. Connect and send `hello` (§3.5.1) within 30 s of starting (§5.4): `id`, `protocolVersion` 1, `appVersion`, `appName`, `pid`, `capabilities` `[]`.
+2. Read `welcome` (§3.5.2). On `accepted: false`, print `reason` and exit.
+3. Send `heartbeat` every 5 s (§3.5.3).
+4. Answer every `ping` with a `pong` whose `replyTo` is the ping's `id` and whose `data.status` is `"healthy"` (§3.5.5).
+5. On `shutdown`, send `shutdown-ack` at once (`replyTo` = the shutdown's `id`), then stop cleanly and exit within `data.timeoutSeconds` (§3.5.6–7). After that, Husky kills the process.
+6. If the pipe closes, Husky is gone: stop as if `shutdown` had arrived with reason `launcher-stopping`.
+
+**Rules of the wire:**
+
+- One JSON object per line, UTF-8, `\n`, no BOM (§3.3). Ids are lower-case GUIDs.
+- The heartbeat and the replies share one pipe: serialise the writes so that two lines never interleave.
+- Ignore message types and fields you do not know.
+- The update messages (§3.5.9–14) are optional. Declare `manual-updates` only if the app implements them; without it the app gets automatic updates.
+
+**Outside the pipe:**
+
+- Logs go to stdout and stderr, one line each (§2.2). Every line also counts as activity for the watchdog (§8.1).
+- Husky reads the installed version from the executable's file version (on Windows a version resource, e.g. `winresource` for Rust). A binary without one, such as any native Linux binary, is fine: Husky falls back to the version it installed last (§5.3, `husky.state.json`).
+
 ---
 
 ## 4. Husky.Client
