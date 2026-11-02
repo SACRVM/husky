@@ -28,6 +28,41 @@ public sealed class UpdateFlowTests
     }
 
     [Fact]
+    public async Task RunAsync_remembers_the_installed_version()
+    {
+        await using TestRig rig = await TestRig.CreateAsync();
+        rig.PublishRelease(version: "2.0.0", body: "v2-binary");
+
+        await rig.Flow.RunAsync(
+            rig.UpdateInfo("2.0.0"),
+            stopAppAsync: _ => Task.CompletedTask,
+            startAppAndAwaitHelloAsync: _ => Task.CompletedTask);
+
+        Assert.Equal("2.0.0", rig.Flow.ReadRememberedVersion());
+        Assert.True(File.Exists(Path.Combine(rig.InstallDir.Path, InstallStateStore.FileName)));
+    }
+
+    [Fact]
+    public async Task RunAsync_keeps_the_remembered_version_when_phase_1_fails()
+    {
+        await using TestRig rig = await TestRig.CreateAsync();
+        rig.PublishRelease(version: "2.0.0", body: "v2-binary");
+        await rig.Flow.RunAsync(
+            rig.UpdateInfo("2.0.0"),
+            stopAppAsync: _ => Task.CompletedTask,
+            startAppAndAwaitHelloAsync: _ => Task.CompletedTask);
+
+        rig.PublishRelease(version: "3.0.0", body: "v3-binary");
+        await Assert.ThrowsAsync<UpdateException>(async () =>
+            await rig.Flow.RunAsync(
+                rig.UpdateInfo("3.0.0", sha256: "deadbeef"),
+                stopAppAsync: _ => Task.CompletedTask,
+                startAppAndAwaitHelloAsync: _ => Task.CompletedTask));
+
+        Assert.Equal("2.0.0", rig.Flow.ReadRememberedVersion());
+    }
+
+    [Fact]
     public async Task RunAsync_skips_install_when_phase_1_fails_with_hash_mismatch()
     {
         await using TestRig rig = await TestRig.CreateAsync();

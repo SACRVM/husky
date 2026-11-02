@@ -11,4 +11,5 @@ namespace Husky;
     ReadCommentHandling = JsonCommentHandling.Skip)]
 [JsonSerializable(typeof(LocalHuskyConfig))]
 [JsonSerializable(typeof(SourceConfig))]
+[JsonSerializable(typeof(InstallState))]
 internal sealed partial class HuskyConfigJsonContext : JsonSerializerContext;

@@ -219,6 +219,7 @@ Field-by-field merge: a non-null value at a higher layer fills the slot. The loc
 ```
 <working-dir>/                ← cwd, or wherever --dir points
   husky.config.json           ← optional when --manifest/--repo is on the command line
+  husky.state.json            ← the version Husky installed last, written by Husky
   app/                        ← installed and updated by Husky
     YourApp.exe
     data/                     ← your app's data, never touched by Husky

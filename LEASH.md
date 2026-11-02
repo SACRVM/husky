@@ -640,6 +640,7 @@ Each flag may appear at most once. Source flags become the top config layer (§5
 6. **Resolve the effective config** — merge CLI + local + source-supplied + defaults per §5.2. If `name` or `executable` ends up unresolved: exit code `2` (with the appropriate message depending on whether the source poll succeeded).
 7. Determine the current app version using the resolved `executable`:
    - File exists → read `FileVersionInfo.GetVersionInfo(executable).FileVersion`.
+   - File exists but carries no version (a native ELF/Mach-O binary, or a .NET single-file bundle on Linux/macOS) → use the version remembered in `husky.state.json` (§6), if it was written for this `executable`. Otherwise `"0.0.0"`.
    - File does **not** exist → enter **bootstrap mode**: treat the current version as `"0.0.0"` so any source version triggers an install.
 8. Decide what to do based on the source poll result and the current vs. source version comparison:
    - **Bootstrap mode** → run the bootstrap update flow (§7.5). On failure: exit code `2`.
@@ -687,6 +688,7 @@ Each flag may appear at most once. Source flags become the top config layer (§5
 ```
 <working-dir>/                 ← working directory (§5.2): cwd, or --dir <path>
 ├── husky.config.json          ← optional when --manifest/--repo is on the command line
+├── husky.state.json           ← version Husky installed last (written by Husky)
 ├── app/                       ← current app version
 │   ├── UmbrellaBot.exe
 │   ├── data/                  ← app user data (DB, models, etc.) — NEVER touched by launcher
@@ -701,7 +703,8 @@ Each flag may appear at most once. Source flags become the top config layer (§5
 
 - `app/` contains *everything* the app needs at runtime, including user data, DBs, caches, local models.
 - `download/` is transient. It is cleared before each new download. After a successful update, it remains for forensic inspection.
-- There is **no** backup directory. There is **no** state file for version info — the current version is read from the executable's metadata.
+- There is **no** backup directory.
+- The current version is read from the executable's metadata. `husky.state.json` is the fallback for executables that carry none (§5.3 step 7): after every successful copy (§7.3) Husky writes `{"version":"<installed>","executable":"<executable>"}`. It lives outside `app/` because `app/` belongs to the app. If the file is missing, unreadable, or names a different `executable`, it is ignored; if it cannot be written, Husky logs a warning and the update still counts as done.
 - `Husky.exe` itself can live inside the working directory (the classic "drop Husky next to its config" deployment) or anywhere on `PATH` (when Husky is installed globally). The launcher's binary location does not affect runtime paths.
 
 ---
@@ -743,6 +746,7 @@ In cases 1–4 the app is currently running. In case 5 it is not.
    - Existing files that are *not* in the update remain unchanged (critical: `app/data/` etc.).
    - New files from the update are created.
    - **Never delete** anything (not even files that existed in the old version but not in the new — the app cleans those up itself if it cares).
+   - After the copy, record the installed version in `husky.state.json` (§6).
 3. Start the app (§5.4).
 4. Await `hello` (timeout: 30s).
 5. On successful hello: log update success.

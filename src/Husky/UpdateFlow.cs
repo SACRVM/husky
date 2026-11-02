@@ -1,3 +1,5 @@
+using Retro.Crt;
+
 namespace Husky;
 
 internal sealed class UpdateFlow(
@@ -46,11 +48,36 @@ internal sealed class UpdateFlow(
             // Phase 2 — cutover.
             await stopAppAsync(ct).ConfigureAwait(false);
             UpdateInstaller.Install(extractedDir, installDirectory);
+            RememberInstalledVersion(update.Version);
             await startAppAndAwaitHelloAsync(ct).ConfigureAwait(false);
         }
         finally
         {
             updateLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// The version this flow last installed for the configured executable,
+    /// or null when none is remembered (LEASH §6).
+    /// </summary>
+    public string? ReadRememberedVersion() =>
+        InstallStateStore.ReadVersion(installDirectory, executableRelativePath);
+
+    private void RememberInstalledVersion(string version)
+    {
+        // The new files are already in place. Failing the update over the
+        // state file would leave the app stopped; without it, a binary that
+        // carries no version just reads as 0.0.0 again and gets reinstalled.
+        try
+        {
+            InstallStateStore.Write(installDirectory, version, executableRelativePath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            ConsoleOutput.Husky(
+                $"could not write {InstallStateStore.FileName}: {ex.Message}",
+                messageColor: Color.Yellow);
         }
     }
 

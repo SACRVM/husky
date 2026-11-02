@@ -45,7 +45,7 @@ internal sealed class LauncherRuntime(
         // a second HTTP round-trip and lets us decide bootstrap-vs-update
         // against the actual installed version.
         bool installed = File.Exists(executablePath);
-        string currentVersion = AppVersionReader.ReadCurrent(executablePath);
+        string currentVersion = ReadCurrentVersion();
 
         if (!installed)
         {
@@ -66,7 +66,7 @@ internal sealed class LauncherRuntime(
                 return ExitCodes.ConfigError;
             }
             ConsoleOutput.Husky($"update succeeded — now on v{installedVersion}");
-            currentVersion = AppVersionReader.ReadCurrent(executablePath);
+            currentVersion = ReadCurrentVersion();
         }
         else
         {
@@ -78,7 +78,7 @@ internal sealed class LauncherRuntime(
                 {
                     await ApplyUpdateAtBootAsync(bootCheck, graceful).ConfigureAwait(false);
                     ConsoleOutput.Husky($"update succeeded — now on v{bootCheck.Version}");
-                    currentVersion = AppVersionReader.ReadCurrent(executablePath);
+                    currentVersion = ReadCurrentVersion();
                 }
                 catch (OperationCanceledException) when (graceful.IsCancellationRequested)
                 {
@@ -289,7 +289,7 @@ internal sealed class LauncherRuntime(
         AppSession? session = CurrentSession;
         string version = session is not null
             ? session.ConnectedApp.Version
-            : AppVersionReader.ReadCurrent(executablePath);
+            : ReadCurrentVersion();
 
         UpdateInfo? update = null;
         Exception? pollError = null;
@@ -428,7 +428,7 @@ internal sealed class LauncherRuntime(
         AppSession? session = CurrentSession;
         string version = session is not null
             ? session.ConnectedApp.Version
-            : AppVersionReader.ReadCurrent(executablePath);
+            : ReadCurrentVersion();
 
         UpdateInfo? update;
         try
@@ -646,6 +646,15 @@ internal sealed class LauncherRuntime(
         lock (sessionGate) trigger = declaredDeadTrigger;
         trigger.TrySetResult();
     }
+
+    /// <summary>
+    /// The installed version as far as the disk tells: the executable's own
+    /// FileVersion, else the version Husky remembers installing (LEASH §5.3
+    /// step 7). While an app is attached, its hello carries the version
+    /// instead.
+    /// </summary>
+    private string ReadCurrentVersion() =>
+        AppVersionReader.ReadCurrent(executablePath, updateFlow.ReadRememberedVersion());
 
     private static void AnnounceUp(AppSession session) =>
         ConsoleOutput.Husky($"{session.ConnectedApp.Name} v{session.ConnectedApp.Version} is up.");
