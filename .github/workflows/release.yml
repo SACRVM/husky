@@ -25,6 +25,11 @@ jobs:
   publish:
     name: publish ${{ matrix.rid }}
     runs-on: ${{ matrix.os }}
+    # id-token lets NuGet/login request the OIDC token for Trusted
+    # Publishing; the GitHub Release job keeps contents: write.
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -98,10 +103,21 @@ jobs:
         if: matrix.rid == 'linux-x64'
         run: dotnet pack src/Husky.Client/Husky.Client.csproj --configuration Release --output nupkg --no-build
 
+      # Trusted Publishing: a policy on nuget.org trusts this repo's
+      # release.yml and trades the job's OIDC token for an API key that
+      # lives one hour. No long-lived key to expire mid-release.
+      # NUGET_USER is the nuget.org profile name of the package owner.
+      - name: NuGet login (Trusted Publishing)
+        id: nuget-login
+        if: matrix.rid == 'linux-x64' && startsWith(github.ref, 'refs/tags/v')
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Push Husky.Client to NuGet.org
         if: matrix.rid == 'linux-x64' && startsWith(github.ref, 'refs/tags/v')
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
           dotnet nuget push 'nupkg/*.nupkg' \
             --api-key "$NUGET_API_KEY" \
