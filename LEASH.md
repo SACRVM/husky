@@ -383,7 +383,7 @@ Husky.Client (§4) is the .NET client. An app written in anything else speaks th
 
 **What the app must do:**
 
-1. Connect and send `hello` (§3.5.1) within 30 s of starting (§5.4): `id`, `protocolVersion` 1, `appVersion`, `appName`, `pid`, `capabilities` `[]`.
+1. Connect and send `hello` (§3.5.1) within 30 s of starting (§5.4): `id`, `protocolVersion` 1, `appVersion`, `appName`, `pid`, `capabilities` `[]`. The pipe is mandatory: an app that does not connect is killed (§12.1).
 2. Read `welcome` (§3.5.2). On `accepted: false`, print `reason` and exit.
 3. Send `heartbeat` every 5 s (§3.5.3).
 4. Answer every `ping` with a `pong` whose `replyTo` is the ping's `id` and whose `data.status` is `"healthy"` (§3.5.5).
@@ -693,7 +693,7 @@ Each flag may appear at most once. Source flags become the top config layer (§5
 4. `Process.Start()`.
 5. Background task: read stdout lines and render to console (source: `app`).
 6. Background task: read stderr lines and render to console (source: `app`, color red).
-7. Wait for the pipe connect (timeout: 30s).
+7. Wait for the pipe connect (timeout: 30s). The pipe is mandatory: an app that does not connect in time is killed and the start fails (§12.1).
 8. Receive `hello`, validate, reply with `welcome`.
 9. Activate the watchdog.
 
@@ -778,9 +778,9 @@ In cases 1–4 the app is currently running. In case 5 it is not.
    - **Never delete** anything (not even files that existed in the old version but not in the new — the app cleans those up itself if it cares).
    - After the copy, record the installed version in `husky.state.json` (§6).
 3. Start the app (§5.4).
-4. Await `hello` (timeout: 30s).
+4. Await the handshake (§5.4 steps 7–8).
 5. On successful hello: log update success.
-6. On missing hello: loud console warning. The watchdog continues normally; the crash-restart logic kicks in if needed.
+6. On a failed handshake: the app is killed and the update is reported as aborted. The new build stays installed, and the crash-restart logic (§8.4) retries the start.
 
 ### 7.4 Concurrent Updates
 
@@ -1211,8 +1211,7 @@ row, so it is buffered like any other line — but Husky rings the bell
 | ZIP download failed | console warning, update aborted, app keeps running |
 | ZIP hash mismatch | console warning, update aborted |
 | ZIP extract error | console warning, update aborted |
-| App start failed | crash-restart logic (§8.4) |
-| Pipe connect timeout after app start | console warning; app keeps running without Husky link, watchdog runs on stdout activity only |
+| App start failed, or no pipe handshake (no connect within 30 s, pipe closed before `hello`, protocol mismatch) | the app is killed. On the first start Husky exits with code `1`; on a restart after a crash or an update, the crash-restart logic (§8.4) retries. There is no mode without the pipe. |
 | App not responding to shutdown | hard-kill after timeout, console warning |
 
 ### 12.2 Client Library Errors
