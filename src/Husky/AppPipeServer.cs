@@ -98,14 +98,12 @@ internal sealed class AppPipeServer : IAsyncDisposable
         return new AppPipeServer(pipeName, pipe, launcherVersion);
     }
 
-    public async Task AcceptAndHandshakeAsync(TimeSpan connectTimeout, CancellationToken ct = default)
+    public async Task AcceptAndHandshakeAsync(TimeSpan timeout, CancellationToken ct = default)
     {
         if (receiverLoop is not null)
             throw new InvalidOperationException("Handshake has already been performed.");
 
-        await WaitForConnectionAsync(connectTimeout, ct).ConfigureAwait(false);
-
-        MessageEnvelope helloEnvelope = await ReadHelloAsync(ct).ConfigureAwait(false);
+        MessageEnvelope helloEnvelope = await ConnectAndReadHelloAsync(timeout, ct).ConfigureAwait(false);
         HelloPayload hello = ParseHelloPayload(helloEnvelope);
 
         if (hello.ProtocolVersion != ProtocolVersion.Current)
@@ -152,19 +150,25 @@ internal sealed class AppPipeServer : IAsyncDisposable
         return requested == UpdateModes.Manual ? UpdateModes.Manual : UpdateModes.Auto;
     }
 
-    private async Task WaitForConnectionAsync(TimeSpan connectTimeout, CancellationToken ct)
+    // One deadline covers connect and hello (LEASH §5.4): an app that
+    // connects and then hangs must not stall the start forever.
+    private async Task<MessageEnvelope> ConnectAndReadHelloAsync(TimeSpan timeout, CancellationToken ct)
     {
-        using CancellationTokenSource connectCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        connectCts.CancelAfter(connectTimeout);
+        using CancellationTokenSource deadlineCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        deadlineCts.CancelAfter(timeout);
 
+        bool connected = false;
         try
         {
-            await pipe.WaitForConnectionAsync(connectCts.Token).ConfigureAwait(false);
+            await pipe.WaitForConnectionAsync(deadlineCts.Token).ConfigureAwait(false);
+            connected = true;
+            return await ReadHelloAsync(deadlineCts.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
-            throw new TimeoutException(
-                $"Hosted app did not connect to the pipe within {connectTimeout.TotalSeconds:F0}s.");
+            throw new TimeoutException(connected
+                ? $"Hosted app connected but sent no hello within {timeout.TotalSeconds:F0}s."
+                : $"Hosted app did not connect to the pipe within {timeout.TotalSeconds:F0}s.");
         }
     }
 

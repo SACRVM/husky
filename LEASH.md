@@ -693,7 +693,7 @@ Each flag may appear at most once. Source flags become the top config layer (§5
 4. `Process.Start()`.
 5. Background task: read stdout lines and render to console (source: `app`).
 6. Background task: read stderr lines and render to console (source: `app`, color red).
-7. Wait for the pipe connect (timeout: 30s). The pipe is mandatory: an app that does not connect in time is killed and the start fails (§12.1).
+7. Wait for the pipe connect and the `hello` (one timeout of 30s for both). The pipe is mandatory: an app that does not connect and say `hello` in time is killed and the start fails (§12.1).
 8. Receive `hello`, validate, reply with `welcome`.
 9. Activate the watchdog.
 
@@ -1211,7 +1211,7 @@ row, so it is buffered like any other line — but Husky rings the bell
 | ZIP download failed | console warning, update aborted, app keeps running |
 | ZIP hash mismatch | console warning, update aborted |
 | ZIP extract error | console warning, update aborted |
-| App start failed, or no pipe handshake (no connect within 30 s, pipe closed before `hello`, protocol mismatch) | the app is killed. On the first start Husky exits with code `1`; on a restart after a crash or an update, the crash-restart logic (§8.4) retries. There is no mode without the pipe. |
+| App start failed, or no pipe handshake (no connect and `hello` within 30 s, pipe closed before `hello`, protocol mismatch) | the app is killed. On the first start Husky exits with code `1`; on a restart after a crash or an update, the crash-restart logic (§8.4) retries. There is no mode without the pipe. |
 | App not responding to shutdown | hard-kill after timeout, console warning |
 
 ### 12.2 Client Library Errors

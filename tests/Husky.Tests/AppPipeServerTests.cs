@@ -495,6 +495,18 @@ public sealed class AppPipeServerTests
     }
 
     [Fact]
+    public async Task Handshake_throws_TimeoutException_when_the_app_connects_but_sends_no_hello()
+    {
+        await using LauncherPipeHarness h = await LauncherPipeHarness.CreateConnectedAsync();
+
+        TimeoutException ex = await Assert.ThrowsAsync<TimeoutException>(
+            async () => await h.Server.AcceptAndHandshakeAsync(TimeSpan.FromMilliseconds(200)));
+
+        Assert.Contains("no hello", ex.Message);
+        Assert.Null(h.Server.ConnectedApp);
+    }
+
+    [Fact]
     public async Task Calling_AcceptAndHandshake_twice_throws()
     {
         await using LauncherPipeHarness h = await LauncherPipeHarness.CreateConnectedAsync();
